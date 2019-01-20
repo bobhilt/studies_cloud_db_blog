@@ -1,0 +1,6 @@
+*.env
+.env.test
+.DS_STORE
+
+# Dependency directories
+node_modules/
