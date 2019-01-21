@@ -1,0 +1,19 @@
+<%- include('partials/header') %>
+<h1>Compose</h1>
+
+    <div class='post'>
+        <form id='addPost' action='/compose' method='post' class='blogPost'>            
+            <div class=form-group>
+                <div class='mb-6'>
+                    <label for='postTitle' '>Title</label>
+                    <input id='postTitle' type='text' name='postTitle' class='form-control' value='' placeholder="What's on your mind?">
+                </div>
+                <div class='mb-6'>
+                    <label for='postContent'>Post</label>
+                    <textarea id='postContent' rows='6' class='form-control md-textarea' placeholder='Details?' name='postContent'></textarea>
+                </div>
+            </div>
+            <button class='btn btn-primary btn-med col-md-3' type='submit' name='' '>Post</button>
+        </form>
+    </div>
+<%- include('partials/footer') %>
