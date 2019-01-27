@@ -5,6 +5,7 @@ const bodyParser = require("body-parser");
 const ejs = require("ejs");
 const _ = require('lodash');
 const path = require('path');
+require('dotenv').config()
 
 const homeStartingContent = "Lacus vel facilisis volutpat est velit egestas dui id ornare. Semper auctor neque vitae tempus quam. Sit amet cursus sit amet dictum sit amet justo. Viverra tellus in hac habitasse. Imperdiet proin fermentum leo vel orci porta. Donec ultrices tincidunt arcu non sodales neque sodales ut. Mattis molestie a iaculis at erat pellentesque adipiscing. Magnis dis parturient montes nascetur ridiculus mus mauris vitae ultricies. Adipiscing elit ut aliquam purus sit amet luctus venenatis lectus. Ultrices vitae auctor eu augue ut lectus arcu bibendum at. Odio euismod lacinia at quis risus sed vulputate odio ut. Cursus mattis molestie a iaculis at erat pellentesque adipiscing.";
 const aboutContent = "Hac habitasse platea dictumst vestibulum rhoncus est pellentesque. Dictumst vestibulum rhoncus est pellentesque elit ullamcorper. Non diam phasellus vestibulum lorem sed. Platea dictumst quisque sagittis purus sit. Egestas sed sed risus pretium quam vulputate dignissim suspendisse. Mauris in aliquam sem fringilla. Semper risus in hendrerit gravida rutrum quisque non tellus orci. Amet massa vitae tortor condimentum lacinia quis vel eros. Enim ut tellus elementum sagittis vitae. Mauris ultrices eros in cursus turpis massa tincidunt dui.";
@@ -18,9 +19,30 @@ app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static(path.join(__dirname, 'public')));
 
+/*-----------------------*/
+// mongo setup
+const mongoose = require('mongoose');
+mongoose.connect (process.env.CONNECT, { useNewUrlParser: true });
+
+const postsSchema = new mongoose.Schema( {
+  title: String,
+  content: String
+});
+
+Post = mongoose.model("Post", postsSchema);
+
+/*-----------------------*/
+
 //get
 app.get("/", (req, res) => {
-  res.render('home', {posts: posts});
+  Post.find(function(err, posts) {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log(posts);
+      res.render('home', {posts: posts});
+    }
+  });
 });
 
 app.get("/about", (req, res) => {
@@ -36,40 +58,43 @@ app.get("/compose", (req, res) => {
 });
 
 app.get("/posts/:post", (req, res) => {
-  let match = false;
-  const post = _.toLower(req.params.post);
-  let postToRender;
-
-  for( let i=0; i<posts.length; i++){
-    const title = _.toLower(posts[i].title);
-
-    if (title === post) {
-      match = true;
-      postToRender = posts[i] ;      
-      break;
+  const id = req.params.post;
+  // const post = _.toLower(req.params.post);
+  // console.log('post params: ' + req.params.post);
+  // console.log(post);
+  Post.findById(id, function(err, post) {
+    if (!err) {
+      if(post) {
+        console.log(post);
+        res.render('post', {content: post});
+      } else {
+        res.status(404).send('Sorry, we cannot find that!');
+      }
+    } else {
+      console.log(err);
     }
-  }
-  if (match) {
-    console.log(postToRender);
-    res.render('post', {content: postToRender} );
-  } else {
-    res.status(404).send('Sorry, we cannot find that!');
-  }
+  });
 });
-
-
 
 //post
 app.post("/compose", (req, res) => {
-  let post = {
+  const post = new Post( {
     title: req.body.postTitle,
     content: req.body.postContent
-  }
+  });
   //console.log(post);
-  posts.push(post);
+  
+  post.save(function(err) {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log("1 item inserted to db");
+      res.redirect("/");
+    }
+  });
+
   console.log(posts);
   
-  res.redirect("/");
 });
 
 app.listen(3000, function() {
